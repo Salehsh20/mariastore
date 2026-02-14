@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — MariaStore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#fdf4ff', 100: '#fae8ff', 200: '#f5d0fe', 300: '#f0abfc', 400: '#e879f9', 500: '#d946ef', 600: '#c026d3', 700: '#a21caf', 800: '#86198f', 900: '#701a75' },
+                        dark: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' },
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body class="bg-dark-950 font-sans antialiased min-h-screen flex items-center justify-center p-4">
+
+    <!-- Background Pattern -->
+    <div class="fixed inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-brand-950 z-0"></div>
+    <div
+        class="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMiI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] z-0">
+    </div>
+
+    <!-- Login Card -->
+    <div class="relative z-10 w-full max-w-md">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div
+                class="w-14 h-14 mx-auto bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl flex items-center justify-center shadow-2xl shadow-brand-500/30 mb-4">
+                <i class="fas fa-gem text-white text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">maria<span class="text-brand-400">store</span>
+            </h1>
+            <p class="text-dark-400 text-sm mt-1">Admin Dashboard</p>
+        </div>
+
+        <!-- Card -->
+        <div class="bg-dark-900/50 backdrop-blur-xl border border-dark-700/50 rounded-3xl p-8 shadow-2xl">
+            <h2 class="text-xl font-bold text-white mb-1">Welcome back</h2>
+            <p class="text-dark-400 text-sm mb-8">Sign in to your admin account</p>
+
+            <!-- Error Message -->
+            <div id="errorMsg"
+                class="hidden mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-3">
+                <i class="fas fa-exclamation-circle flex-shrink-0"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- Form -->
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-dark-300 mb-2">Email Address</label>
+                    <div class="relative">
+                        <input type="email" id="email" required placeholder="admin@mariastore.com"
+                            class="w-full pl-11 pr-4 py-3 bg-dark-800/50 border border-dark-600/50 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all text-sm">
+                        <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-dark-500 text-sm"></i>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-dark-300 mb-2">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password" required placeholder="••••••••"
+                            class="w-full pl-11 pr-12 py-3 bg-dark-800/50 border border-dark-600/50 rounded-xl text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all text-sm">
+                        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-dark-500 text-sm"></i>
+                        <button type="button" onclick="togglePassword()"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300 transition-colors">
+                            <i class="fas fa-eye text-sm" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" id="submitBtn"
+                    class="w-full py-3.5 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-semibold rounded-xl transition-all shadow-lg shadow-brand-600/25 hover:shadow-brand-500/30 flex items-center justify-center gap-2 text-sm">
+                    <span id="btnText">Sign In</span>
+                    <i class="fas fa-spinner fa-spin hidden" id="btnSpinner"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-dark-600 text-xs mt-6">&copy; 2026 MariaStore. Protected area.</p>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        // Check if already logged in
+        const token = localStorage.getItem('admin_token');
+        if (token) {
+            fetch(`${API_URL}/admin/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => { if (r.ok) window.location.href = '/admin/dashboard.html'; })
+                .catch(() => { });
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('errorMsg');
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('btnSpinner');
+
+            errorEl.classList.add('hidden');
+            btn.disabled = true;
+            btnText.textContent = 'Signing in...';
+            spinner.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/admin/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'Login failed');
+
+                localStorage.setItem('admin_token', data.token);
+                localStorage.setItem('admin_user', JSON.stringify(data.admin));
+                window.location.href = '/admin/dashboard.html';
+            } catch (err) {
+                document.getElementById('errorText').textContent = err.message;
+                errorEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Sign In';
+                spinner.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>

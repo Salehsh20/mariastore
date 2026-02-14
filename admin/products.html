@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products — MariaStore Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#fdf4ff', 100: '#fae8ff', 200: '#f5d0fe', 300: '#f0abfc', 400: '#e879f9', 500: '#d946ef', 600: '#c026d3', 700: '#a21caf', 800: '#86198f', 900: '#701a75' },
+                        dark: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' },
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .animate-fade-up {
+            animation: fade-up .4s ease forwards
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1
+            }
+        }
+
+        .animate-slide-in {
+            animation: slide-in .3s ease forwards
+        }
+    </style>
+</head>
+
+<body class="bg-dark-50 font-sans antialiased">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 z-40 bg-dark-900/60 backdrop-blur-sm hidden lg:hidden"
+        onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="fixed top-0 left-0 z-50 h-full w-64 bg-dark-900 border-r border-dark-800 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="flex items-center gap-3 px-6 h-16 border-b border-dark-800/60">
+            <div
+                class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
+                <i class="fas fa-gem text-white text-xs"></i></div>
+            <span class="text-lg font-extrabold text-white tracking-tight">maria<span
+                    class="text-brand-400">store</span></span>
+        </div>
+        <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto scrollbar-thin">
+            <p class="px-3 text-[10px] font-bold text-dark-500 uppercase tracking-widest mb-3">Main</p>
+            <a href="dashboard.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dark-400 hover:text-white hover:bg-dark-800/60 transition-colors"><i
+                    class="fas fa-chart-pie w-5 text-center text-xs"></i> Dashboard</a>
+            <a href="products.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-brand-500/10 text-brand-400 border border-brand-500/10"><i
+                    class="fas fa-box w-5 text-center text-xs"></i> Products</a>
+            <a href="categories.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dark-400 hover:text-white hover:bg-dark-800/60 transition-colors"><i
+                    class="fas fa-tags w-5 text-center text-xs"></i> Categories</a>
+            <p class="px-3 text-[10px] font-bold text-dark-500 uppercase tracking-widest mb-3 mt-8">Quick Links</p>
+            <a href="/" target="_blank"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dark-400 hover:text-white hover:bg-dark-800/60 transition-colors"><i
+                    class="fas fa-external-link-alt w-5 text-center text-xs"></i> View Store</a>
+        </nav>
+        <div class="p-4 border-t border-dark-800/60">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-9 h-9 bg-brand-600/20 rounded-full flex items-center justify-center"><i
+                        class="fas fa-user text-brand-400 text-xs"></i></div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate" id="adminEmail">Admin</p>
+                    <p class="text-xs text-dark-500">Administrator</p>
+                </div>
+                <button onclick="logout()"
+                    class="p-2 rounded-lg text-dark-500 hover:text-red-400 hover:bg-dark-800 transition-colors"
+                    title="Logout"><i class="fas fa-sign-out-alt text-sm"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen">
+        <!-- Top Bar -->
+        <header class="sticky top-0 z-30 bg-dark-50/80 backdrop-blur-lg border-b border-dark-200">
+            <div class="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()"
+                        class="lg:hidden p-2 rounded-lg text-dark-600 hover:bg-dark-200 transition-colors"><i
+                            class="fas fa-bars"></i></button>
+                    <h1 class="text-lg font-bold text-dark-900">Products</h1>
+                </div>
+                <button onclick="openModal()"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+                    <i class="fas fa-plus text-xs"></i> Add Product
+                </button>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="p-4 sm:p-6 lg:p-8">
+            <!-- Search -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                <div class="relative flex-1">
+                    <input type="text" id="searchInput" placeholder="Search products..."
+                        class="w-full pl-10 pr-4 py-2.5 bg-white border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 placeholder:text-dark-400">
+                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="bg-white rounded-2xl border border-dark-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-dark-50/50 border-b border-dark-200">
+                                <th
+                                    class="text-left py-3.5 px-5 text-xs font-semibold text-dark-400 uppercase tracking-wider">
+                                    Product</th>
+                                <th
+                                    class="text-left py-3.5 px-5 text-xs font-semibold text-dark-400 uppercase tracking-wider hidden md:table-cell">
+                                    Category</th>
+                                <th
+                                    class="text-left py-3.5 px-5 text-xs font-semibold text-dark-400 uppercase tracking-wider">
+                                    Price</th>
+                                <th
+                                    class="text-left py-3.5 px-5 text-xs font-semibold text-dark-400 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="text-right py-3.5 px-5 text-xs font-semibold text-dark-400 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsBody">
+                            <tr>
+                                <td colspan="5" class="py-16 text-center text-dark-400"><i
+                                        class="fas fa-spinner fa-spin mr-2"></i>Loading products...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div class="flex items-center justify-between px-5 py-4 border-t border-dark-200" id="tablePagination">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-dark-900/60 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-full max-w-2xl bg-white shadow-2xl overflow-y-auto">
+            <div
+                class="sticky top-0 z-10 bg-white border-b border-dark-200 px-6 py-4 flex items-center justify-between">
+                <h2 id="modalTitle" class="text-lg font-bold text-dark-900">Add Product</h2>
+                <button onclick="closeModal()"
+                    class="p-2 rounded-lg hover:bg-dark-100 text-dark-400 hover:text-dark-700 transition-colors"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <form id="productForm" class="p-6 space-y-6" enctype="multipart/form-data">
+                <input type="hidden" id="productId" value="">
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-medium text-dark-700 mb-2">Product Name *</label>
+                    <input type="text" id="pName" required placeholder="e.g. Classic T-Shirt"
+                        class="w-full px-4 py-2.5 border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-dark-700 mb-2">Description</label>
+                    <textarea id="pDesc" rows="3" placeholder="Product description..."
+                        class="w-full px-4 py-2.5 border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 resize-none"></textarea>
+                </div>
+
+                <!-- Price & Old Price -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-dark-700 mb-2">Price *</label>
+                        <input type="number" id="pPrice" required step="0.01" min="0" placeholder="0.00"
+                            class="w-full px-4 py-2.5 border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-700 mb-2">Compare Price</label>
+                        <input type="number" id="pOldPrice" step="0.01" min="0" placeholder="0.00"
+                            class="w-full px-4 py-2.5 border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400">
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label class="block text-sm font-medium text-dark-700 mb-2">Category</label>
+                    <select id="pCategory"
+                        class="w-full px-4 py-2.5 border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 cursor-pointer">
+                        <option value="">No Category</option>
+                    </select>
+                </div>
+
+                <!-- Active Toggle -->
+                <div class="flex items-center gap-3">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="pActive" checked class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-dark-200 peer-focus:ring-2 peer-focus:ring-brand-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-brand-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all">
+                        </div>
+                    </label>
+                    <span class="text-sm font-medium text-dark-700">Active (visible on store)</span>
+                </div>
+
+                <!-- Images -->
+                <div>
+                    <label class="block text-sm font-medium text-dark-700 mb-2">Images</label>
+                    <div id="existingImages" class="flex flex-wrap gap-3 mb-3"></div>
+                    <label
+                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-dark-300 rounded-xl cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition-all">
+                        <i class="fas fa-cloud-upload-alt text-2xl text-dark-400 mb-2"></i>
+                        <span class="text-sm text-dark-500">Click to upload images</span>
+                        <span class="text-xs text-dark-400 mt-1">PNG, JPG, WebP (max 10MB each)</span>
+                        <input type="file" id="pImages" accept="image/*" multiple class="hidden">
+                    </label>
+                    <div id="imagePreview" class="flex flex-wrap gap-3 mt-3"></div>
+                </div>
+
+                <!-- Colors -->
+                <div>
+                    <label class="block text-sm font-medium text-dark-700 mb-2">Colors</label>
+                    <div id="colorsList" class="space-y-2 mb-3"></div>
+                    <button type="button" onclick="addColorRow()"
+                        class="text-sm text-brand-600 hover:text-brand-700 font-medium"><i
+                            class="fas fa-plus mr-1.5"></i>Add Color</button>
+                </div>
+
+                <!-- Sizes -->
+                <div>
+                    <label class="block text-sm font-medium text-dark-700 mb-2">Sizes</label>
+                    <div id="sizesList" class="space-y-2 mb-3"></div>
+                    <button type="button" onclick="addSizeRow()"
+                        class="text-sm text-brand-600 hover:text-brand-700 font-medium"><i
+                            class="fas fa-plus mr-1.5"></i>Add Size</button>
+                </div>
+
+                <!-- Submit -->
+                <div class="sticky bottom-0 bg-white border-t border-dark-200 -mx-6 -mb-6 px-6 py-4 flex gap-3">
+                    <button type="button" onclick="closeModal()"
+                        class="flex-1 py-3 border border-dark-200 rounded-xl text-sm font-semibold text-dark-600 hover:bg-dark-50 transition-colors">Cancel</button>
+                    <button type="submit" id="submitBtn"
+                        class="flex-1 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <span id="submitText">Create Product</span>
+                        <i class="fas fa-spinner fa-spin hidden" id="submitSpinner"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-dark-900/60 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+            <div class="w-14 h-14 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+                <i class="fas fa-trash-alt text-red-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-dark-900 text-center mb-2">Delete Product</h3>
+            <p class="text-sm text-dark-500 text-center mb-6" id="deleteMsg">Are you sure? This action cannot be undone.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()"
+                    class="flex-1 py-2.5 border border-dark-200 rounded-xl text-sm font-semibold text-dark-600 hover:bg-dark-50 transition-colors">Cancel</button>
+                <button onclick="confirmDelete()" id="deleteBtnConfirm"
+                    class="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-semibold transition-colors">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[999] flex flex-col gap-3"></div>
+
+    <script src="js/adminConfig.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/products.js"></script>
+</body>
+
+</html>

@@ -124,7 +124,44 @@ function renderProduct(p) {
 
     // Add to cart
     document.getElementById('addToCartBtn').addEventListener('click', () => {
+        const colors = currentProduct.product_colors || [];
+        const sizes = currentProduct.product_sizes || [];
+        const hasColors = colors.length > 0;
+        const hasSizes = sizes.filter(s => s.in_stock).length > 0;
+
+        if (hasColors && !selectedColor) {
+            showToast('Please select a color', 'error');
+            document.getElementById('colorsSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        if (hasSizes && !selectedSize) {
+            showToast('Please select a size', 'error');
+            document.getElementById('sizesSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
         Cart.addItem(currentProduct, quantity, selectedColor, selectedSize);
+    });
+
+    // Buy now (WhatsApp) - validate before redirect
+    document.getElementById('buyNowBtn').addEventListener('click', (e) => {
+        const colors = currentProduct.product_colors || [];
+        const sizes = currentProduct.product_sizes || [];
+        const hasColors = colors.length > 0;
+        const hasSizes = sizes.filter(s => s.in_stock).length > 0;
+
+        if (hasColors && !selectedColor) {
+            e.preventDefault();
+            showToast('Please select a color', 'error');
+            document.getElementById('colorsSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        if (hasSizes && !selectedSize) {
+            e.preventDefault();
+            showToast('Please select a size', 'error');
+            document.getElementById('sizesSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
     });
 
     // Buy now (WhatsApp)

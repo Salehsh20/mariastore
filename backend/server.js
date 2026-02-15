@@ -41,6 +41,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ── Static files ────────────────────────────────────
 app.use('/', express.static(path.join(__dirname, '..', 'frontend')));
 app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
+app.use('/assets', express.static(path.join(__dirname, '..', 'public', 'assets')));
 
 // ── API Routes ──────────────────────────────────────
 // Public routes

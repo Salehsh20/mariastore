@@ -1,39 +1,17 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "backend/server.js",
-      "use": "@vercel/node"
+  "functions": {
+    "backend/server.js": {
+      "runtime": "nodejs18.x"
     }
-  ],
+  },
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/server.js"
-    },
-    {
-      "src": "/admin/js/(.*)",
-      "dest": "/admin/js/$1"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "/admin/$1"
-    },
-    {
-      "src": "/admin",
-      "dest": "/admin/index.html"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/frontend/js/$1"
-    },
-    {
-      "src": "/(product|cart)\\.html",
-      "dest": "/frontend/$0"
-    },
-    {
-      "src": "/",
-      "dest": "/frontend/index.html"
-    }
+    { "src": "/api/(.*)", "dest": "backend/server.js" },
+    { "src": "/admin/js/(.*)", "dest": "/admin/js/$1" },
+    { "src": "/admin/(.*)", "dest": "/admin/$1" },
+    { "src": "/admin", "dest": "/admin/index.html" },
+    { "src": "/js/(.*)", "dest": "/frontend/js/$1" },
+    { "src": "/(product|cart)\\.html", "dest": "/frontend/$0" },
+    { "src": "/", "dest": "/frontend/index.html" }
   ]
 }

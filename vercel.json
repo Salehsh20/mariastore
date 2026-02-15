@@ -12,12 +12,28 @@
       "dest": "backend/server.js"
     },
     {
-      "src": "/admin/(.*)",
-      "dest": "admin/$1"
+      "src": "/admin/js/(.*)",
+      "dest": "/admin/js/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "frontend/$1"
+      "src": "/admin/(.*)",
+      "dest": "/admin/$1"
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin/index.html"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/frontend/js/$1"
+    },
+    {
+      "src": "/(product|cart)\\.html",
+      "dest": "/frontend/$0"
+    },
+    {
+      "src": "/",
+      "dest": "/frontend/index.html"
     }
   ]
 }

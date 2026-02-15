@@ -21,3 +21,5 @@ Thumbs.db
 # Uploads (optional - remove if you want to commit uploaded images)
 backend/uploads/*
 !backend/uploads/.gitkeep
+.vercel
+.env*.local

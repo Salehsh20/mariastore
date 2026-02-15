@@ -1,13 +1,17 @@
 {
-  "name": "mariastore",
-  "version": "1.0.0",
-  "description": "E-commerce platform with WhatsApp checkout integration",
-  "scripts": {
-    "start": "cd backend && npm start",
-    "dev": "cd backend && npm run dev",
-    "install-backend": "cd backend && npm install"
-  },
-  "keywords": ["ecommerce", "whatsapp", "supabase"],
-  "author": "MariaStore",
-  "license": "MIT"
+    "name": "mariastore",
+    "version": "1.0.0",
+    "description": "E-commerce platform with WhatsApp checkout integration",
+    "scripts": {
+        "start": "cd backend && npm start",
+        "dev": "cd backend && npm run dev",
+        "install-backend": "cd backend && npm install"
+    },
+    "keywords": [
+        "ecommerce",
+        "whatsapp",
+        "supabase"
+    ],
+    "author": "MariaStore",
+    "license": "MIT"
 }

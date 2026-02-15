@@ -211,12 +211,25 @@ function setupImagePreview() {
     document.getElementById('pImages')?.addEventListener('change', (e) => {
         const preview = document.getElementById('imagePreview');
         preview.innerHTML = '';
+        const fileCount = e.target.files.length;
+
+        if (fileCount > 0) {
+            // Show count
+            const countDiv = document.createElement('div');
+            countDiv.className = 'w-full text-sm font-medium text-brand-600 mb-2';
+            countDiv.textContent = `${fileCount} image${fileCount > 1 ? 's' : ''} selected`;
+            preview.appendChild(countDiv);
+        }
+
         Array.from(e.target.files).forEach((file, i) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const div = document.createElement('div');
-                div.className = 'w-20 h-20 rounded-lg overflow-hidden border border-dark-200';
-                div.innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`;
+                div.className = 'relative w-24 h-24 rounded-lg overflow-hidden border-2 border-dark-200';
+                div.innerHTML = `
+                    <img src="${ev.target.result}" class="w-full h-full object-cover">
+                    <div class="absolute top-1 right-1 bg-dark-900/70 text-white text-xs px-1.5 py-0.5 rounded">${i + 1}</div>
+                `;
                 preview.appendChild(div);
             };
             reader.readAsDataURL(file);

@@ -109,9 +109,14 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// ── Start server ────────────────────────────────────
-app.listen(PORT, () => {
-    console.log(`MariaStore server running on http://localhost:${PORT}`);
-    console.log(`Admin panel: http://localhost:${PORT}/admin`);
-    console.log(`API: http://localhost:${PORT}/api`);
-});
+// ── Start server (skip in Vercel serverless) ────────
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`MariaStore server running on http://localhost:${PORT}`);
+        console.log(`Admin panel: http://localhost:${PORT}/admin`);
+        console.log(`API: http://localhost:${PORT}/api`);
+    });
+}
+
+// Export for Vercel serverless
+module.exports = app;

@@ -19,11 +19,23 @@ async function loadCategories() {
     try {
         const res = await adminFetch('/admin/categories');
         allCategories = await res.json();
+
+        // Product form dropdown
         const select = document.getElementById('pCategory');
         select.innerHTML = '<option value="">No Category</option>';
         allCategories.forEach(cat => {
             select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
         });
+
+        // Category filter dropdown
+        const filter = document.getElementById('categoryFilter');
+        if (filter) {
+            filter.innerHTML = '<option value="">All Categories</option>';
+            allCategories.forEach(cat => {
+                filter.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            });
+            filter.addEventListener('change', () => loadProducts(1));
+        }
     } catch (err) { console.error('Failed to load categories:', err); }
 }
 
@@ -31,8 +43,10 @@ async function loadCategories() {
 async function loadProducts(page = 1) {
     const body = document.getElementById('productsBody');
     const search = document.getElementById('searchInput')?.value || '';
+    const categoryId = document.getElementById('categoryFilter')?.value || '';
     const params = new URLSearchParams({ page, limit: 10 });
     if (search) params.set('search', search);
+    if (categoryId) params.set('category_id', categoryId);
 
     try {
         const res = await adminFetch(`/admin/products?${params}`);

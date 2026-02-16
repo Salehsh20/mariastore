@@ -91,6 +91,9 @@
             <a href="dashboard.html"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dark-400 hover:text-white hover:bg-dark-800/60 transition-colors"><i
                     class="fas fa-chart-pie w-5 text-center text-xs"></i> Dashboard</a>
+            <a href="orders.html"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dark-400 hover:text-white hover:bg-dark-800/60 transition-colors"><i
+                    class="fas fa-shopping-bag w-5 text-center text-xs"></i> Orders</a>
             <a href="products.html"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-brand-500/10 text-brand-400 border border-brand-500/10"><i
                     class="fas fa-box w-5 text-center text-xs"></i> Products</a>
@@ -137,12 +140,21 @@
 
         <!-- Content -->
         <div class="p-4 sm:p-6 lg:p-8">
-            <!-- Search -->
+            <!-- Search & Filter -->
             <div class="flex flex-col sm:flex-row gap-3 mb-6">
                 <div class="relative flex-1">
                     <input type="text" id="searchInput" placeholder="Search products..."
                         class="w-full pl-10 pr-4 py-2.5 bg-white border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 placeholder:text-dark-400">
                     <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400 text-xs"></i>
+                </div>
+                <div class="relative">
+                    <select id="categoryFilter"
+                        class="appearance-none pl-10 pr-10 py-2.5 bg-white border border-dark-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 text-dark-700 cursor-pointer min-w-[180px]">
+                        <option value="">All Categories</option>
+                    </select>
+                    <i class="fas fa-filter absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-400 text-xs"></i>
+                    <i
+                        class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-dark-400 text-[10px]"></i>
                 </div>
             </div>
 

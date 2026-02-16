@@ -47,6 +47,7 @@ app.use('/assets', express.static(path.join(__dirname, '..', 'public', 'assets')
 // Public routes
 app.use('/api/products', apiLimiter, require('./routes/products'));
 app.use('/api/categories', apiLimiter, require('./routes/categories'));
+app.use('/api/orders', apiLimiter, require('./routes/orders'));
 
 // WhatsApp link generator endpoint
 const { generateWhatsAppLink } = require('./utils/whatsapp');
@@ -64,6 +65,7 @@ const authMiddleware = require('./middleware/auth');
 app.use('/api/admin/auth', authLimiter, require('./routes/admin/auth'));
 app.use('/api/admin/products', authMiddleware, require('./routes/admin/products'));
 app.use('/api/admin/categories', authMiddleware, require('./routes/admin/categories'));
+app.use('/api/admin/orders', authMiddleware, require('./routes/admin/orders'));
 
 // Admin dashboard stats
 app.get('/api/admin/stats', authMiddleware, async (req, res) => {

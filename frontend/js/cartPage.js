@@ -1,35 +1,35 @@
 // ── Cart Page Logic ──
 document.addEventListener('DOMContentLoaded', () => {
-    Cart.updateBadge();
-    renderCart();
-    setupCartEvents();
+  Cart.updateBadge();
+  renderCart();
+  setupCartEvents();
 });
 
 function renderCart() {
-    const items = Cart.getItems();
-    const emptyEl = document.getElementById('emptyCart');
-    const filledEl = document.getElementById('filledCart');
-    const subtitle = document.getElementById('cartSubtitle');
-    const clearBtn = document.getElementById('clearCartBtn');
+  const items = Cart.getItems();
+  const emptyEl = document.getElementById('emptyCart');
+  const filledEl = document.getElementById('filledCart');
+  const subtitle = document.getElementById('cartSubtitle');
+  const clearBtn = document.getElementById('clearCartBtn');
 
-    if (items.length === 0) {
-        emptyEl.classList.remove('hidden');
-        filledEl.classList.add('hidden');
-        clearBtn.classList.add('hidden');
-        subtitle.textContent = 'Your cart is empty';
-        return;
-    }
+  if (items.length === 0) {
+    emptyEl.classList.remove('hidden');
+    filledEl.classList.add('hidden');
+    clearBtn.classList.add('hidden');
+    subtitle.textContent = 'Your cart is empty';
+    return;
+  }
 
-    emptyEl.classList.add('hidden');
-    filledEl.classList.remove('hidden');
-    clearBtn.classList.remove('hidden');
+  emptyEl.classList.add('hidden');
+  filledEl.classList.remove('hidden');
+  clearBtn.classList.remove('hidden');
 
-    const count = Cart.getCount();
-    subtitle.textContent = `${count} item${count !== 1 ? 's' : ''} in your cart`;
+  const count = Cart.getCount();
+  subtitle.textContent = `${count} item${count !== 1 ? 's' : ''} in your cart`;
 
-    // Render items
-    const list = document.getElementById('cartItemsList');
-    list.innerHTML = items.map(item => `
+  // Render items
+  const list = document.getElementById('cartItemsList');
+  list.innerHTML = items.map(item => `
     <div class="bg-white border border-dark-200 rounded-2xl p-4 sm:p-5 flex gap-4 sm:gap-5 group" data-key="${item.key}">
       <!-- Image -->
       <a href="product.html?slug=${item.slug}" class="flex-shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-dark-100">
@@ -72,36 +72,36 @@ function renderCart() {
     </div>
   `).join('');
 
-    // Summary
-    const total = Cart.getTotal();
-    document.getElementById('summarySubtotal').textContent = formatPrice(total);
-    document.getElementById('summaryShipping').textContent = total >= 50 ? 'Free' : formatPrice(5);
-    const finalTotal = total >= 50 ? total : total + 5;
-    document.getElementById('summaryTotal').textContent = formatPrice(finalTotal);
-    document.getElementById('checkoutBtn').href = Cart.getWhatsAppLink();
+  // Summary
+  const total = Cart.getTotal();
+  document.getElementById('summarySubtotal').textContent = formatPrice(total);
+  document.getElementById('summaryTotal').textContent = formatPrice(total);
+  // Set WhatsApp link on the secondary button
+  const whatsappBtn = document.getElementById('whatsappBtn');
+  if (whatsappBtn) whatsappBtn.href = Cart.getWhatsAppLink();
 }
 
 function changeQty(key, newQty) {
-    if (newQty < 1) {
-        removeCartItem(key);
-        return;
-    }
-    Cart.updateQuantity(key, newQty);
-    renderCart();
+  if (newQty < 1) {
+    removeCartItem(key);
+    return;
+  }
+  Cart.updateQuantity(key, newQty);
+  renderCart();
 }
 
 function removeCartItem(key) {
-    Cart.removeItem(key);
-    showToast('Item removed from cart', 'info');
-    renderCart();
+  Cart.removeItem(key);
+  showToast('Item removed from cart', 'info');
+  renderCart();
 }
 
 function setupCartEvents() {
-    document.getElementById('clearCartBtn')?.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear your cart?')) {
-            Cart.clear();
-            showToast('Cart cleared', 'info');
-            renderCart();
-        }
-    });
+  document.getElementById('clearCartBtn')?.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear your cart?')) {
+      Cart.clear();
+      showToast('Cart cleared', 'info');
+      renderCart();
+    }
+  });
 }

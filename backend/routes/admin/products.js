@@ -8,7 +8,7 @@ const slugify = require('slugify');
 // GET /api/admin/products — List all products (including inactive)
 router.get('/', async (req, res) => {
     try {
-        const { page = 1, limit = 20, search } = req.query;
+        const { page = 1, limit = 20, search, category_id } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
 
         let query = supabase
@@ -25,6 +25,10 @@ router.get('/', async (req, res) => {
 
         if (search) {
             query = query.ilike('name', `%${search}%`);
+        }
+
+        if (category_id) {
+            query = query.eq('category_id', category_id);
         }
 
         const { data, error, count } = await query;

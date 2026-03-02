@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categories — MariaStore Admin</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#8B7671">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -67,8 +70,8 @@
         class="fixed top-0 left-0 z-50 h-full w-64 bg-dark-900 border-r border-dark-800 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
         <div class="flex items-center gap-3 px-6 h-16 border-b border-dark-800/60">
             <img src="/assets/logo.png" alt="MariaStore Logo" class="h-8 sm:h-10 w-auto">
-            <span class="text-base sm:text-lg font-extrabold text-white tracking-tight">maria<span
-                    class="text-brand-400">store</span></span>
+            <span class="text-base sm:text-lg font-extrabold text-white tracking-tight">Maria<span
+                    class="text-brand-400">Store</span></span>
         </div>
         <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto scrollbar-thin">
             <p class="px-3 text-[10px] font-bold text-dark-500 uppercase tracking-widest mb-3">Main</p>
@@ -208,6 +211,7 @@
     <script src="js/adminConfig.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/categories.js"></script>
+    <script src="/pwa.js"></script>
 </body>
 
 </html>

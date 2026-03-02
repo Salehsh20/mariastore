@@ -62,18 +62,18 @@ function buildProductCard(product) {
     const img = getProductImage(product);
     const discount = product.old_price ? Math.round((1 - product.price / product.old_price) * 100) : 0;
     return `
-    <a href="product.html?slug=${product.slug}" class="group block">
-      <div class="relative overflow-hidden rounded-2xl bg-dark-100 aspect-square mb-3">
+    <a href="product.html?slug=${product.slug}" class="group block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl ring-1 ring-dark-200/50 hover:ring-brand-300/50 transition-all duration-500 hover:-translate-y-1">
+      <div class="relative overflow-hidden aspect-[3/4] bg-dark-100">
         <img src="${img}" alt="${product.name}" loading="lazy"
-          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
           onerror="this.src='${CONFIG.PLACEHOLDER_IMAGE}'">
-        ${discount > 0 ? `<span class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">${discount}% OFF</span>` : ''}
-        <div class="absolute inset-0 bg-gradient-to-t from-dark-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        ${discount > 0 ? `<span class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">${discount}% OFF</span>` : ''}
+        <div class="absolute inset-0 bg-gradient-to-t from-dark-900/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       </div>
-      <div class="px-0.5">
+      <div class="p-3.5 sm:p-4">
         ${product.categories ? `<p class="text-[11px] font-semibold text-brand-600 uppercase tracking-wider mb-1">${product.categories.name}</p>` : ''}
         <h3 class="text-sm font-semibold text-dark-800 line-clamp-2 group-hover:text-brand-600 transition-colors leading-snug">${product.name}</h3>
-        <div class="flex items-baseline gap-2 mt-1.5">
+        <div class="flex items-baseline gap-2 mt-2">
           <span class="text-base font-bold text-dark-900">${formatPrice(product.price)}</span>
           ${product.old_price ? `<span class="text-xs text-dark-400 line-through">${formatPrice(product.old_price)}</span>` : ''}
         </div>

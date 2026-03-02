@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MariaStore — Run Panel</title>
+    <style>
+        body {
+            font-family: system-ui, Segoe UI, Roboto, Arial;
+            margin: 40px
+        }
+
+        button {
+            margin: 6px;
+            padding: 10px 14px;
+            font-size: 16px
+        }
+
+        .status {
+            margin-top: 16px
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 12px
+        }
+    </style>
+</head>
+
+<body>
+    <h1>MariaStore — Run Panel</h1>
+
+    <p>
+        Use this page to quickly open the frontend, admin panel, and validate the API.
+        The backend must be running (run `npm run dev` in the project root).
+    </p>
+
+    <div>
+        <button id="open-frontend">Open Frontend</button>
+        <button id="open-admin">Open Admin</button>
+        <button id="check-api">Check API (/api/products)</button>
+    </div>
+
+    <div class="status">
+        <strong>Result:</strong>
+        <pre id="result">Not checked yet.</pre>
+    </div>
+
+    <script>
+        const base = 'http://localhost:3000';
+        document.getElementById('open-frontend').addEventListener('click', () => {
+            window.open(base, '_blank');
+        });
+        document.getElementById('open-admin').addEventListener('click', () => {
+            window.open(base + '/admin', '_blank');
+        });
+        document.getElementById('check-api').addEventListener('click', async () => {
+            const out = document.getElementById('result');
+            out.textContent = 'Checking...';
+            try {
+                const res = await fetch(base + '/api/products');
+                const text = await res.text();
+                out.textContent = `HTTP ${res.status} ${res.statusText}\n\n` + text;
+            } catch (err) {
+                out.textContent = 'Error: ' + err.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

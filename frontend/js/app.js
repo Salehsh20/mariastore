@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearch();
     setupFilters();
     setupMobileMenu();
+    setupInstallAppButton();
     setupWhatsAppLinks();
 });
 
@@ -40,16 +41,16 @@ async function loadCategories() {
         ];
 
         grid.innerHTML = data.map((cat, i) => `
-      <a href="/?category=${cat.slug}" class="group relative overflow-hidden rounded-2xl aspect-[4/3] cursor-pointer" onclick="filterByCategory(event, '${cat.slug}')">
+      <a href="/?category=${cat.slug}" class="group relative overflow-hidden rounded-2xl aspect-[3/4] sm:aspect-[4/5] cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 ring-1 ring-dark-200/50" onclick="filterByCategory(event, '${cat.slug}')">
         ${cat.image_url
-                ? `<img src="${cat.image_url}" alt="${cat.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">`
-                : `<div class="w-full h-full bg-gradient-to-br ${gradients[i % gradients.length]}"></div>`
+                ? `<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image: url('${cat.image_url}')"></div>`
+                : `<div class="absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}"></div>`
             }
-        <div class="absolute inset-0 bg-gradient-to-t from-dark-900/70 via-dark-900/20 to-transparent"></div>
-        <div class="absolute bottom-0 left-0 right-0 p-5">
-          <h3 class="text-white font-bold text-lg tracking-tight">${cat.name}</h3>
-          <p class="text-white/70 text-xs mt-0.5 flex items-center gap-1">
-            Shop now <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+        <div class="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-dark-900/30 to-transparent group-hover:from-dark-900/90 transition-all duration-500"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+          <h3 class="text-white font-bold text-lg sm:text-xl tracking-tight drop-shadow-lg">${cat.name}</h3>
+          <p class="text-white/80 text-xs sm:text-sm mt-1 flex items-center gap-1.5 font-medium">
+            Shop now <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-1.5 transition-transform duration-300"></i>
           </p>
         </div>
       </a>
@@ -153,6 +154,42 @@ function setupMobileMenu() {
     if (btn && menu) {
         btn.addEventListener('click', () => menu.classList.toggle('hidden'));
     }
+}
+
+// ── PWA Install (Mobile Menu) ──
+function setupInstallAppButton() {
+    const installBtn = document.getElementById('installAppBtn');
+    if (!installBtn) return;
+
+    let deferredPrompt = null;
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+        installBtn.classList.add('hidden');
+        return;
+    }
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredPrompt = event;
+        installBtn.classList.remove('hidden');
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+            installBtn.classList.add('hidden');
+        }
+        deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+        installBtn.classList.add('hidden');
+        deferredPrompt = null;
+    });
 }
 
 // ── WhatsApp Links ──

@@ -251,6 +251,76 @@ function setupImagePreview() {
     });
 }
 
+async function optimizeImageForUpload(file) {
+    const supportedForDirectUpload = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const maxDirectFileSize = 700 * 1024;
+
+    if (supportedForDirectUpload.includes(file.type) && file.size <= maxDirectFileSize) {
+        return file;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+        const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`Unsupported image format: ${file.name}`));
+            img.src = objectUrl;
+        });
+
+        const maxWidth = 1280;
+        const maxHeight = 1280;
+        let { width, height } = image;
+
+        if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Image processing failed');
+
+        ctx.drawImage(image, 0, 0, width, height);
+
+        const blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/jpeg', 0.72);
+        });
+
+        if (!blob) {
+            throw new Error(`Failed to optimize image: ${file.name}`);
+        }
+
+        const safeBase = (file.name.split('.').slice(0, -1).join('.') || 'image')
+            .replace(/[^a-zA-Z0-9-_]/g, '-')
+            .toLowerCase();
+
+        return new File([blob], `${safeBase}.jpg`, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+        });
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
+}
+
+async function prepareImagesForUpload(files) {
+    const output = [];
+
+    for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+            throw new Error(`Invalid file type: ${file.name}`);
+        }
+        output.push(await optimizeImageForUpload(file));
+    }
+
+    return output;
+}
+
 // ── Form Submit ──
 function setupForm() {
     document.getElementById('productForm')?.addEventListener('submit', async (e) => {
@@ -275,9 +345,10 @@ function setupForm() {
             formData.append('is_active', document.getElementById('pActive').checked);
 
             // Images
-            const files = document.getElementById('pImages').files;
-            for (let i = 0; i < files.length; i++) {
-                formData.append('images', files[i]);
+            const rawFiles = Array.from(document.getElementById('pImages').files || []);
+            const optimizedFiles = await prepareImagesForUpload(rawFiles);
+            for (let i = 0; i < optimizedFiles.length; i++) {
+                formData.append('images', optimizedFiles[i]);
             }
 
             // Colors
@@ -304,7 +375,16 @@ function setupForm() {
             const method = productId ? 'PUT' : 'POST';
 
             const res = await adminFetch(url, { method, body: formData });
-            if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed'); }
+            if (!res.ok) {
+                let errorMessage = 'Failed to save product';
+                try {
+                    const err = await res.json();
+                    errorMessage = err.error || errorMessage;
+                } catch {
+                    errorMessage = `Failed to save product (HTTP ${res.status})`;
+                }
+                throw new Error(errorMessage);
+            }
 
             showToast(productId ? 'Product updated!' : 'Product created!', 'success');
             closeModal();

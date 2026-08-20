@@ -2,8 +2,63 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../../config/supabase');
 const upload = require('../../middleware/upload');
-const { processAndUploadImage, deleteImage } = require('../../utils/imageHandler');
+const { processAndUploadImages, deleteImage } = require('../../utils/imageHandler');
 const slugify = require('slugify');
+
+// Cap every image route with the same limit multer enforces
+const MAX_IMAGES = upload.MAX_FILES;
+
+// ── Payload parsers ─────────────────────────────────
+// Colors and sizes arrive as JSON strings in multipart form data. These throw
+// on a malformed payload so the caller can answer 400 instead of silently
+// saving nothing.
+
+// Expected: [{ name, hex, image_url? }]
+function parseColors(raw, productId) {
+    let arr;
+    try {
+        arr = JSON.parse(raw);
+    } catch (err) {
+        throw new Error('Colors must be valid JSON');
+    }
+    if (!Array.isArray(arr)) throw new Error('Colors must be an array');
+
+    return arr.map(color => {
+        if (!color || typeof color !== 'object' || !color.name) {
+            throw new Error('Each color needs a name — expected [{ name, hex }]');
+        }
+        return {
+            product_id: productId,
+            color_name: color.name,
+            color_hex: color.hex,
+            image_url: color.image_url || null
+        };
+    });
+}
+
+// Expected: [{ size, in_stock? }] — a bare ["S", "M"] is accepted too
+function parseSizes(raw, productId) {
+    let arr;
+    try {
+        arr = JSON.parse(raw);
+    } catch (err) {
+        throw new Error('Sizes must be valid JSON');
+    }
+    if (!Array.isArray(arr)) throw new Error('Sizes must be an array');
+
+    return arr.map(entry => {
+        const isObject = entry && typeof entry === 'object';
+        const size = isObject ? entry.size : entry;
+        if (!size) {
+            throw new Error('Each size needs a value — expected [{ size, in_stock }]');
+        }
+        return {
+            product_id: productId,
+            size,
+            in_stock: isObject ? entry.in_stock !== false : true
+        };
+    });
+}
 
 // GET /api/admin/products — List all products (including inactive)
 router.get('/', async (req, res) => {
@@ -76,7 +131,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/admin/products — Create product
-router.post('/', upload.array('images', 10), async (req, res) => {
+router.post('/', upload.array('images', MAX_IMAGES), async (req, res) => {
     try {
         const { name, description, price, old_price, category_id, colors, sizes } = req.body;
 
@@ -103,48 +158,71 @@ router.post('/', upload.array('images', 10), async (req, res) => {
 
         if (error) throw error;
 
+        // A product whose colors, sizes or images failed to save is worse than
+        // no product at all — the admin has no way to tell it is incomplete.
+        // Undo everything and report the failure instead.
+        const uploadedUrls = [];
+        const abort = async (message, status, detail) => {
+            console.error('Product create aborted:', message, detail || '');
+            for (const url of uploadedUrls) {
+                await deleteImage(url);
+            }
+            // product_images / product_colors / product_sizes cascade on delete
+            await supabase.from('products').delete().eq('id', product.id);
+            return res.status(status).json({ error: message });
+        };
+
         // Upload images
         if (req.files && req.files.length > 0) {
-            for (let i = 0; i < req.files.length; i++) {
-                const file = req.files[i];
-                const { fullUrl, thumbnailUrl } = await processAndUploadImage(
-                    file.buffer,
-                    file.originalname,
-                    'products'
-                );
+            let uploaded;
+            try {
+                uploaded = await processAndUploadImages(req.files, 'products');
+            } catch (uploadErr) {
+                return abort('Failed to process product images', 500, uploadErr);
+            }
 
-                await supabase.from('product_images').insert({
+            const imageRows = uploaded.map(({ fullUrl, thumbnailUrl }, i) => {
+                uploadedUrls.push(fullUrl);
+                return {
                     product_id: product.id,
                     image_url: fullUrl,
                     thumbnail_url: thumbnailUrl,
                     is_primary: i === 0,
                     sort_order: i
-                });
-            }
+                };
+            });
+
+            const { error: imageError } = await supabase.from('product_images').insert(imageRows);
+            if (imageError) return abort('Failed to save product images', 500, imageError);
         }
 
         // Insert colors
         if (colors) {
-            const colorsArr = JSON.parse(colors);
-            for (const color of colorsArr) {
-                await supabase.from('product_colors').insert({
-                    product_id: product.id,
-                    color_name: color.name,
-                    color_hex: color.hex,
-                    image_url: color.image_url || null
-                });
+            let colorRows;
+            try {
+                colorRows = parseColors(colors, product.id);
+            } catch (parseErr) {
+                return abort(parseErr.message, 400);
+            }
+
+            if (colorRows.length > 0) {
+                const { error: colorError } = await supabase.from('product_colors').insert(colorRows);
+                if (colorError) return abort('Failed to save product colors', 500, colorError);
             }
         }
 
         // Insert sizes
         if (sizes) {
-            const sizesArr = JSON.parse(sizes);
-            for (const size of sizesArr) {
-                await supabase.from('product_sizes').insert({
-                    product_id: product.id,
-                    size: size.size,
-                    in_stock: size.in_stock !== false
-                });
+            let sizeRows;
+            try {
+                sizeRows = parseSizes(sizes, product.id);
+            } catch (parseErr) {
+                return abort(parseErr.message, 400);
+            }
+
+            if (sizeRows.length > 0) {
+                const { error: sizeError } = await supabase.from('product_sizes').insert(sizeRows);
+                if (sizeError) return abort('Failed to save product sizes', 500, sizeError);
             }
         }
 
@@ -165,7 +243,7 @@ router.post('/', upload.array('images', 10), async (req, res) => {
 });
 
 // PUT /api/admin/products/:id — Update product
-router.put('/:id', upload.array('images', 10), async (req, res) => {
+router.put('/:id', upload.array('images', MAX_IMAGES), async (req, res) => {
     try {
         const { name, description, price, old_price, category_id, is_active, colors, sizes } = req.body;
 
@@ -203,48 +281,71 @@ router.put('/:id', upload.array('images', 10), async (req, res) => {
                 ? existingImages[0].sort_order + 1
                 : 0;
 
-            for (let i = 0; i < req.files.length; i++) {
-                const file = req.files[i];
-                const { fullUrl, thumbnailUrl } = await processAndUploadImage(
-                    file.buffer,
-                    file.originalname,
-                    'products'
-                );
+            let uploaded;
+            try {
+                uploaded = await processAndUploadImages(req.files, 'products');
+            } catch (uploadErr) {
+                console.error('Image processing error:', uploadErr);
+                return res.status(500).json({ error: 'Failed to process product images' });
+            }
 
-                await supabase.from('product_images').insert({
-                    product_id: req.params.id,
-                    image_url: fullUrl,
-                    thumbnail_url: thumbnailUrl,
-                    is_primary: false,
-                    sort_order: startOrder + i
-                });
+            const imageRows = uploaded.map(({ fullUrl, thumbnailUrl }, i) => ({
+                product_id: req.params.id,
+                image_url: fullUrl,
+                thumbnail_url: thumbnailUrl,
+                is_primary: false,
+                sort_order: startOrder + i
+            }));
+
+            const { error: imageError } = await supabase.from('product_images').insert(imageRows);
+            if (imageError) {
+                console.error('Image insert error:', imageError);
+                // Don't leave orphaned files sitting in storage
+                for (const row of imageRows) {
+                    await deleteImage(row.image_url);
+                }
+                return res.status(500).json({ error: 'Failed to save product images' });
             }
         }
 
-        // Update colors if provided
+        // Update colors if provided — parse before deleting, so a malformed
+        // payload can't wipe the rows it was meant to replace
         if (colors) {
+            let colorRows;
+            try {
+                colorRows = parseColors(colors, req.params.id);
+            } catch (parseErr) {
+                return res.status(400).json({ error: parseErr.message });
+            }
+
             await supabase.from('product_colors').delete().eq('product_id', req.params.id);
-            const colorsArr = JSON.parse(colors);
-            for (const color of colorsArr) {
-                await supabase.from('product_colors').insert({
-                    product_id: req.params.id,
-                    color_name: color.name,
-                    color_hex: color.hex,
-                    image_url: color.image_url || null
-                });
+
+            if (colorRows.length > 0) {
+                const { error: colorError } = await supabase.from('product_colors').insert(colorRows);
+                if (colorError) {
+                    console.error('Color update error:', colorError);
+                    return res.status(500).json({ error: 'Failed to update product colors' });
+                }
             }
         }
 
-        // Update sizes if provided
+        // Update sizes if provided — same parse-then-replace ordering
         if (sizes) {
+            let sizeRows;
+            try {
+                sizeRows = parseSizes(sizes, req.params.id);
+            } catch (parseErr) {
+                return res.status(400).json({ error: parseErr.message });
+            }
+
             await supabase.from('product_sizes').delete().eq('product_id', req.params.id);
-            const sizesArr = JSON.parse(sizes);
-            for (const size of sizesArr) {
-                await supabase.from('product_sizes').insert({
-                    product_id: req.params.id,
-                    size: size.size,
-                    in_stock: size.in_stock !== false
-                });
+
+            if (sizeRows.length > 0) {
+                const { error: sizeError } = await supabase.from('product_sizes').insert(sizeRows);
+                if (sizeError) {
+                    console.error('Size update error:', sizeError);
+                    return res.status(500).json({ error: 'Failed to update product sizes' });
+                }
             }
         }
 
@@ -320,7 +421,7 @@ router.delete('/:id/hard', async (req, res) => {
 });
 
 // POST /api/admin/products/:id/images — Add images to existing product
-router.post('/:id/images', upload.array('images', 10), async (req, res) => {
+router.post('/:id/images', upload.array('images', MAX_IMAGES), async (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: 'No images provided' });
@@ -337,29 +438,28 @@ router.post('/:id/images', upload.array('images', 10), async (req, res) => {
             ? existingImages[0].sort_order + 1
             : 0;
 
-        const uploadedImages = [];
+        const uploaded = await processAndUploadImages(req.files, 'products');
 
-        for (let i = 0; i < req.files.length; i++) {
-            const file = req.files[i];
-            const { fullUrl, thumbnailUrl } = await processAndUploadImage(
-                file.buffer,
-                file.originalname,
-                'products'
-            );
+        const imageRows = uploaded.map(({ fullUrl, thumbnailUrl }, i) => ({
+            product_id: req.params.id,
+            image_url: fullUrl,
+            thumbnail_url: thumbnailUrl,
+            is_primary: false,
+            sort_order: startOrder + i
+        }));
 
-            const { data: imgRecord, error } = await supabase
-                .from('product_images')
-                .insert({
-                    product_id: req.params.id,
-                    image_url: fullUrl,
-                    thumbnail_url: thumbnailUrl,
-                    is_primary: false,
-                    sort_order: startOrder + i
-                })
-                .select()
-                .single();
+        const { data: uploadedImages, error: imageError } = await supabase
+            .from('product_images')
+            .insert(imageRows)
+            .select();
 
-            if (!error) uploadedImages.push(imgRecord);
+        if (imageError) {
+            console.error('Image insert error:', imageError);
+            // Don't leave orphaned files sitting in storage
+            for (const row of imageRows) {
+                await deleteImage(row.image_url);
+            }
+            return res.status(500).json({ error: 'Failed to save product images' });
         }
 
         res.status(201).json(uploadedImages);

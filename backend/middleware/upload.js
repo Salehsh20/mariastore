@@ -12,13 +12,19 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
+// Keep this in one place — the routes cap upload.array() with it and the error
+// handler quotes it back to the user, so all three can never drift apart.
+const MAX_FILES = 20;
+
 const upload = multer({
     storage,
     fileFilter,
     limits: {
         fileSize: 10 * 1024 * 1024, // 10MB max per file
-        files: 10 // max 10 files at once
+        files: MAX_FILES
     }
 });
+
+upload.MAX_FILES = MAX_FILES;
 
 module.exports = upload;

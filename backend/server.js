@@ -106,6 +106,13 @@ app.use((err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ error: 'File too large. Maximum 10MB allowed.' });
     }
+    if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE') {
+        const max = require('./middleware/upload').MAX_FILES;
+        return res.status(400).json({ error: `Too many images. Maximum ${max} per upload.` });
+    }
+    if (err.code && err.code.startsWith('LIMIT_')) {
+        return res.status(400).json({ error: 'Upload rejected: ' + err.message });
+    }
     if (err.message && err.message.includes('Invalid file type')) {
         return res.status(400).json({ error: err.message });
     }

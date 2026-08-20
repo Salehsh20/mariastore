@@ -18,6 +18,15 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Cart must have at least one item.' });
         }
 
+        // ── Validate each item before it feeds into the total ──
+        for (const item of items) {
+            const price = parseFloat(item.price);
+            const quantity = parseInt(item.quantity);
+            if (!item.name || !Number.isFinite(price) || price < 0 || !Number.isInteger(quantity) || quantity < 1) {
+                return res.status(400).json({ error: 'Cart contains an invalid item. Please refresh and try again.' });
+            }
+        }
+
         // ── Calculate total from items ──
         const total = items.reduce((sum, item) => {
             return sum + (parseFloat(item.price) * parseInt(item.quantity));
@@ -61,7 +70,20 @@ router.post('/', async (req, res) => {
 
         if (itemsError) {
             console.error('Order items insert error:', itemsError);
-            // Order was created but items failed — still return order ID
+
+            // Never leave an order holding a total with no record of what was
+            // ordered — roll it back so the customer sees a real failure and
+            // can retry, instead of a silent success.
+            const { error: rollbackError } = await supabase
+                .from('orders')
+                .delete()
+                .eq('id', order.id);
+
+            if (rollbackError) {
+                console.error('CRITICAL: could not roll back order', order.id, rollbackError);
+            }
+
+            return res.status(500).json({ error: 'Failed to place order. Please try again.' });
         }
 
         res.status(201).json({

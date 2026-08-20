@@ -125,5 +125,5 @@ mariastore2/
 | DELETE | /api/admin/products/:id | Soft delete |
 | DELETE | /api/admin/products/:id/hard | Permanent delete |
 | POST | /api/admin/products/:id/images | Upload images |
-| DELETE | /api/admin/images/:id | Delete image |
+| DELETE | /api/admin/products/images/:id | Delete image |
 | GET/POST/PUT/DELETE | /api/admin/categories | Category CRUD |

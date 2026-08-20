@@ -308,8 +308,17 @@ async function optimizeImageForUpload(file) {
     }
 }
 
+// Must match MAX_FILES in backend/middleware/upload.js
+const MAX_IMAGES_PER_UPLOAD = 20;
+
 async function prepareImagesForUpload(files) {
     const output = [];
+
+    // Catch this here so the user gets told immediately, instead of waiting for
+    // every image to be optimised and uploaded before the server rejects them
+    if (files.length > MAX_IMAGES_PER_UPLOAD) {
+        throw new Error(`Too many images: ${files.length} selected, maximum is ${MAX_IMAGES_PER_UPLOAD}. Save the product first, then add the rest by editing it.`);
+    }
 
     for (const file of files) {
         if (!file.type.startsWith('image/')) {

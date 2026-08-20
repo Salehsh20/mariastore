@@ -1,10 +1,14 @@
-require('dotenv').config();
+const path = require('path');
+
+// Resolve .env next to this file rather than from the working directory —
+// serverless entry points load the app from the project root, where a bare
+// dotenv.config() silently finds nothing.
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +48,17 @@ app.use('/admin', express.static(path.join(__dirname, '..', 'admin')));
 app.use('/assets', express.static(path.join(__dirname, '..', 'public', 'assets')));
 
 // ── API Routes ──────────────────────────────────────
+// Without credentials every query fails in a different place. Answer once,
+// clearly, so a misconfigured deployment is obvious from the response itself.
+app.use('/api', (req, res, next) => {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+        return res.status(503).json({
+            error: 'Server is not configured: SUPABASE_URL and SUPABASE_SERVICE_KEY are missing.'
+        });
+    }
+    next();
+});
+
 // Public routes
 app.use('/api/products', apiLimiter, require('./routes/products'));
 app.use('/api/categories', apiLimiter, require('./routes/categories'));
